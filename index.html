@@ -1,86 +1,46 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A browser-based nonlinear equation solver using Bisection, Newton–Raphson, and Secant methods.">
-  <title>RootFinder — Nonlinear Equation Solver</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="solver.js" defer></script>
-  <script src="app.js" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Compare Bisection, Newton–Raphson and Secant methods for nonlinear equations, including convergence, iterations, residual accuracy and function evaluations.">
+<title>Root Solver — Numerical Methods Dashboard</title><link rel="stylesheet" href="styles.css">
+<script src="solver.js" defer></script><script src="app.js" defer></script>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="#top" aria-label="RootFinder home"><span class="brand-mark">ƒx</span><span>RootFinder</span></a>
-    <span class="top-note"><span class="status-dot"></span> Runs locally in your browser</span>
-  </header>
-
-  <main id="top" class="page-shell">
-    <section class="hero">
-      <div class="eyebrow">NUMERICAL ANALYSIS TOOLKIT</div>
-      <h1>Find the root.<br><span>Understand every step.</span></h1>
-      <p>Explore nonlinear equations with three classic numerical methods. Enter your function, choose a method, and inspect the iteration-by-iteration results.</p>
-      <div class="method-pills"><span>Bisection</span><span>Newton–Raphson</span><span>Secant</span></div>
-    </section>
-
-    <section class="workspace" aria-label="Equation solver">
-      <div class="panel solver-panel">
-        <div class="panel-heading"><div><span class="step-label">01 / INPUT</span><h2>Define your equation</h2></div><span class="heading-icon">∑</span></div>
-        <form id="solver-form">
-          <label for="equation">Function <span class="muted">f(x) = 0</span></label>
-          <div class="equation-wrap"><span class="fx-prefix">f(x) =</span><input id="equation" name="equation" value="x^3 - x - 2" autocomplete="off" spellcheck="false" required aria-describedby="equation-help"></div>
-          <div id="equation-help" class="field-hint">Enter an expression in x, for example <button type="button" class="inline-example" data-expression="cos(x)-x">cos(x)-x</button>.</div>
-
-          <label for="method" class="spaced-label">Numerical method</label>
-          <select id="method" name="method">
-            <option value="1">Bisection Method</option>
-            <option value="2">Newton–Raphson Method</option>
-            <option value="3">Secant Method</option>
-          </select>
-
-          <div class="parameter-grid" id="parameter-grid">
-            <div class="field" id="field-a"><label for="param-a" id="label-a">Lower bound (a)</label><input id="param-a" type="number" step="any" value="1" required></div>
-            <div class="field" id="field-b"><label for="param-b" id="label-b">Upper bound (b)</label><input id="param-b" type="number" step="any" value="2" required></div>
-          </div>
-          <div class="field"><label for="tolerance">Tolerance</label><input id="tolerance" type="number" min="0.000000000001" step="any" value="0.0001" required><div class="field-hint">Smaller tolerances generally require more iterations.</div></div>
-          <div class="field"><label for="max-iterations">Maximum iterations</label><input id="max-iterations" type="number" min="1" max="10000" step="1" value="100"></div>
-          <div id="input-error" class="alert error hidden" role="alert"></div>
-          <button id="solve-button" class="primary-button" type="submit"><span>Calculate root</span><span aria-hidden="true">↗</span></button>
-        </form>
-        <details class="help-details">
-          <summary>Supported equations &amp; input rules</summary>
-          <div class="help-content">
-            <h3>Operators</h3><p><code>+</code> addition · <code>-</code> subtraction · <code>*</code> multiplication · <code>/</code> division · <code>^</code> power · <code>( )</code> grouping</p>
-            <h3>Functions</h3><p><code>sin(x)</code>, <code>cos(x)</code>, <code>tan(x)</code>, <code>exp(x)</code>, <code>log(x)</code>, <code>sqrt(x)</code>, <code>abs(x)</code></p>
-            <h3>Constants</h3><p><code>pi</code> and <code>e</code>. Trigonometric functions use radians; <code>log</code> is the natural logarithm.</p>
-            <h3>Input rules</h3><ul><li>Use <code>x</code> as the variable.</li><li>Write multiplication explicitly: <code>2*x</code>, not <code>2x</code>.</li><li>Function names are lowercase and require parentheses.</li><li><code>log(x)</code> requires a positive argument; <code>sqrt(x)</code> requires a nonnegative argument.</li><li>Enter <code>f(x)</code>; the solver interprets it as <code>f(x) = 0</code>.</li></ul>
-            <h3>Examples</h3><div class="example-list"><button type="button" data-expression="x^3-x-2">x^3 - x - 2</button><button type="button" data-expression="x^2-4">x^2 - 4</button><button type="button" data-expression="sin(x)-0.5">sin(x) - 0.5</button><button type="button" data-expression="exp(x)-3">exp(x) - 3</button><button type="button" data-expression="sqrt(x)-2">sqrt(x) - 2</button><button type="button" data-expression="(x+1)*(x-2)">(x+1)*(x-2)</button></div>
-          </div>
-        </details>
-      </div>
-
-      <div class="results-column">
-        <section class="panel result-panel" aria-live="polite">
-          <div class="panel-heading"><div><span class="step-label">02 / RESULTS</span><h2>Solution summary</h2></div><span class="heading-icon">⌁</span></div>
-          <div id="empty-state" class="empty-state"><div class="empty-symbol">x*</div><h3>Your result will appear here</h3><p>Enter an equation and calculate a root to see the solution summary and iteration table.</p></div>
-          <div id="result-content" class="hidden">
-            <div id="status-banner" class="status-banner"></div>
-            <div class="root-card"><div class="root-label">APPROXIMATE ROOT</div><div id="root-value" class="root-value">—</div><div id="root-equation" class="root-equation"></div></div>
-            <div class="metric-grid"><div class="metric"><span>Residual |f(x)|</span><strong id="residual-value">—</strong></div><div class="metric"><span>Iterations</span><strong id="iteration-value">—</strong></div><div class="metric"><span>Method</span><strong id="method-value">—</strong></div><div class="metric"><span>Tolerance</span><strong id="tolerance-value">—</strong></div></div>
-            <p id="result-message" class="result-message"></p>
-          </div>
-          <div id="wasm-error" class="alert error hidden" role="alert">The WebAssembly solver did not load. Follow the setup instructions in README.md and serve this folder through a local web server.</div>
-        </section>
-
-        <section class="panel table-panel">
-          <div class="panel-heading table-heading"><div><span class="step-label">03 / CONVERGENCE</span><h2>Iteration table</h2></div><button id="download-csv" class="secondary-button" type="button" disabled>Export CSV ↓</button></div>
-          <div id="table-empty" class="table-empty">The iteration history will be shown here after you solve an equation.</div>
-          <div id="table-scroll" class="table-scroll hidden"><table id="iteration-table"><thead></thead><tbody></tbody></table></div>
-          <div id="table-footnote" class="table-footnote hidden">Values are shown at full precision in calculations and rounded for display.</div>
-        </section>
-      </div>
-    </section>
-    <footer><span>RootFinder · Numerical methods for learning and exploration</span><span>Powered by C++ / WebAssembly</span></footer>
-  </main>
-</body>
-</html>
+<header class="topbar"><a class="brand" href="#top"><span class="brand-mark">ƒx</span><span><b>Root Solver</b><small>Bisection · Newton-Raphson · Secant</small></span></a><nav><a href="#solver">Solver</a><a href="#method-guide">Method guide</a><a href="#examples">Examples</a></nav></header>
+<main id="top" class="shell">
+<section id="solver" class="panel input-panel">
+  <div class="input-heading"><div><span class="eyebrow">01 / INPUT</span><h1>Define your equation</h1><p>Find a root with one method, or compare all three side by side.</p></div><div class="equation-symbol" aria-hidden="true">∑</div></div>
+  <div class="input-grid">
+    <div class="equation-field full-width"><label for="equation">Function <span class="math-label">f(x) = 0</span></label><input id="equation" value="x^3 - x - 2" spellcheck="false" autocomplete="off" aria-describedby="parse-note"><small id="parse-note">Enter an expression in x, for example cos(x)-x.</small></div>
+    <div class="full-width mode-switch-wrap"><label>How would you like to solve?</label><div class="mode-switch" role="group" aria-label="Solving mode"><button type="button" id="mode-single" class="mode-button">Solve one method</button><button type="button" id="mode-compare" class="mode-button active">Compare all three</button></div><small class="field-help">Solve with one method, or compare all three on the same equation.</small></div>
+    <div id="method-picker" class="full-width"><label>Choose a method</label><div class="method-choice" role="group" aria-label="Numerical method"><button type="button" class="method-choice-button" data-pick-method="1"> <span class="method-dot bis-dot"></span> Bisection</button><button type="button" class="method-choice-button" data-pick-method="2"><span class="method-dot newton-dot"></span> Newton–Raphson</button><button type="button" class="method-choice-button" data-pick-method="3"><span class="method-dot secant-dot"></span> Secant</button></div></div>
+    <div class="field-group method-input" data-for-method="1"><label for="bracket-a">Lower bound (a)</label><input id="bracket-a" type="number" step="any" value="1"><small class="field-help">Start of the bracket</small></div>
+    <div class="field-group method-input" data-for-method="1"><label for="bracket-b">Upper bound (b)</label><input id="bracket-b" type="number" step="any" value="2"><small class="field-help">End of the bracket</small></div>
+    <div class="field-group method-input" data-for-method="2"><label for="param-a">Initial guess (x₀)</label><input id="param-a" type="number" step="any" value="1"><small class="field-help">Starting estimate for Newton–Raphson</small></div>
+    <div class="field-group method-input" data-for-method="3"><label for="param-a-secant">First guess (x₀)</label><input id="param-a-secant" type="number" step="any" value="1"><small class="field-help">First starting estimate for Secant</small></div>
+    <div class="field-group method-input" data-for-method="3"><label for="param-b">Second guess (x₁)</label><input id="param-b" type="number" step="any" value="2"><small class="field-help">Second starting estimate for Secant</small></div>
+    <div class="field-group"><label for="tolerance">Tolerance</label><input id="tolerance" type="number" min="0.000000000001" step="any" value="0.001" inputmode="decimal" placeholder="e.g. 0.001"><small class="field-help">Enter a decimal such as 0.01, 0.001, or 0.000001.</small></div>
+    <div class="field-group"><label for="decimal-places">Decimal places</label><select id="decimal-places" class="field-select"><option value="2">2 places</option><option value="3">3 places</option><option value="4" selected>4 places</option><option value="5">5 places</option><option value="6">6 places</option><option value="8">8 places</option><option value="10">10 places</option><option value="12">12 places</option></select><small class="field-help">Choose how many decimal places to show in results and the iteration table.</small></div>
+    <div class="field-group"><label for="max-iterations">Maximum iterations</label><input id="max-iterations" type="number" min="1" max="10000" value="100"><small class="field-help">Limit for each selected method</small></div>
+    <button id="solve-button" class="primary full-width">Compare all three methods <span>↗</span></button>
+  </div>
+  <div class="quick-examples" id="examples"><span>TRY AN EXAMPLE</span><button data-expression="x^3 - x - 2">x³ − x − 2</button><button data-expression="cos(x)-x">cos(x) − x</button><button data-expression="x*exp(x)-1">x·eˣ − 1</button><button data-expression="log(x)+x^2-3">ln(x) + x² − 3</button><button data-expression="(x-1)^2*(x+2)">(x−1)²(x+2)</button></div>
+  <div class="options-row"><span>Calculations run locally in your browser using C++ / WebAssembly.</span><details><summary>Supported equations &amp; input rules</summary><p>Use x, pi, e; operators + − * / ^ and parentheses; functions sin, cos, tan, exp, log, sqrt, abs. Use explicit multiplication such as 2*x. Trigonometric functions use radians. Bisection requires a sign-changing bracket.</p></details></div>
+  <div id="input-error" class="alert hidden" role="alert"></div>
+</section>
+<section class="chart-grid">
+  <article class="panel chart-panel"><div class="section-title"><div><h2>Where each method is looking</h2><p id="trajectory-subtitle">Solve to view root estimates across iterations.</p></div><div class="legend"><span class="leg bis">Bisection</span><span class="leg newton">Newton</span><span class="leg secant">Secant</span></div></div><canvas id="trajectory-chart" height="250" aria-label="Root estimates by iteration"></canvas><div class="chart-caption">Estimate xₖ by iteration · final estimates are marked at the right edge</div></article>
+  <article class="panel chart-panel"><div class="section-title"><div><h2>How fast the error shrinks</h2><p>Log scale. Lower residuals indicate a more accurate root.</p></div></div><canvas id="convergence-chart" height="250" aria-label="Residual convergence chart"></canvas><div class="chart-caption">Residual |f(xₖ)| · horizontal line indicates the requested tolerance</div></article>
+</section>
+<section id="takeaway" class="panel takeaway hidden"><b>TAKEAWAY</b><span id="takeaway-text"></span></section>
+<section class="comparison-grid" id="comparison-grid">
+  <article class="panel method-card bis-card"><div class="card-top"><h3>Bisection</h3><span class="chip">Bracketed</span></div><div class="big-stat" id="bis-iterations">— <small>iterations</small></div><div class="stats"><div><span>Function evaluations</span><b id="bis-evals">—</b></div><div><span>Root</span><b id="bis-root">—</b></div><div><span>|f(root)|</span><b id="bis-residual">—</b></div><div><span>Error estimate</span><b id="bis-error">—</b></div><div><span>Observed order</span><b id="bis-order">~1.00 linear</b></div><div><span>Elapsed time</span><b id="bis-time">—</b></div></div><p class="method-note">Halves the bracket each step. Requires a sign change; no derivative.</p></article>
+  <article class="panel method-card newton-card"><div class="card-top"><h3>Newton–Raphson</h3><span class="chip">Fast local convergence</span></div><div class="big-stat" id="newton-iterations">— <small>iterations</small></div><div class="stats"><div><span>Function evaluations</span><b id="newton-evals">—</b></div><div><span>Root</span><b id="newton-root">—</b></div><div><span>|f(root)|</span><b id="newton-residual">—</b></div><div><span>Error estimate</span><b id="newton-error">—</b></div><div><span>Observed order</span><b id="newton-order">—</b></div><div><span>Elapsed time</span><b id="newton-time">—</b></div></div><p class="method-note">Uses a tangent. Numerical derivative costs extra function evaluations and can fail with a poor starting guess.</p></article>
+  <article class="panel method-card secant-card"><div class="card-top"><h3>Secant</h3><span class="chip">No derivative</span></div><div class="big-stat" id="secant-iterations">— <small>iterations</small></div><div class="stats"><div><span>Function evaluations</span><b id="secant-evals">—</b></div><div><span>Root</span><b id="secant-root">—</b></div><div><span>|f(root)|</span><b id="secant-residual">—</b></div><div><span>Error estimate</span><b id="secant-error">—</b></div><div><span>Observed order</span><b id="secant-order">~1.62 superlinear</b></div><div><span>Elapsed time</span><b id="secant-time">—</b></div></div><p class="method-note">Uses a chord through two recent points. Usually fewer evaluations than Newton with a numerical derivative.</p></article>
+</section>
+<section class="panel table-panel"><div class="table-head"><div><span class="eyebrow">ITERATION HISTORY</span><h2>Inspect every step</h2></div><div class="table-actions"><div class="tabs" role="tablist"><button class="active" data-method-tab="1">Bisection</button><button data-method-tab="2">Newton–Raphson</button><button data-method-tab="3">Secant</button></div><button id="download-csv" class="secondary" disabled>Export CSV ↓</button></div></div><div id="table-status" class="table-empty">Choose a method and solve, or compare all three methods.</div><div id="table-scroll" class="table-scroll hidden"><table id="iteration-table"><thead></thead><tbody></tbody></table></div></section>
+<section id="method-guide" class="guide"><h2>Choosing a method</h2><div class="guide-grid"><div><b class="bis-text">Bisection</b><p>Most dependable when the initial interval brackets a root. Convergence is linear and requires a sign change.</p></div><div><b class="newton-text">Newton–Raphson</b><p>Often the fewest iterations near a simple root, but depends on the initial guess and derivative quality.</p></div><div><b class="secant-text">Secant</b><p>Does not need a derivative and often converges faster than Bisection, though convergence is not guaranteed.</p></div></div></section>
+<footer><span>Root Solver · Numerical methods for learning and exploration</span><span>Runs in your browser · C++ / WebAssembly</span></footer>
+</main>
+</body></html>

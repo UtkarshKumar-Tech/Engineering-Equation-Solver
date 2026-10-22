@@ -111,7 +111,8 @@ public:
     }
 };
 
-static double f(const std::string& expr, double x) { return Parser(expr, x).evaluate(); }
+static int gFunctionEvaluations = 0;
+static double f(const std::string& expr, double x) { ++gFunctionEvaluations; return Parser(expr, x).evaluate(); }
 static double derivative(const std::string& expr, double x) {
     double h = std::cbrt(std::numeric_limits<double>::epsilon()) * std::max(1.0, std::fabs(x));
     return (f(expr, x + h) - f(expr, x - h)) / (2.0 * h);
@@ -125,12 +126,15 @@ struct Result {
     double root = std::numeric_limits<double>::quiet_NaN();
     double residual = std::numeric_limits<double>::quiet_NaN();
     int iterations = 0;
+    int functionEvaluations = 0;
     std::vector<std::string> columns;
     std::vector<Row> rows;
 };
 
 static Result solveInternal(const std::string& expr, int method, double p1, double p2, double tol, int maxIter) {
+    gFunctionEvaluations = 0;
     Result r;
+    struct EvalCapture { Result& result; ~EvalCapture() { result.functionEvaluations = gFunctionEvaluations; } } capture{r};
     if (expr.empty()) throw std::runtime_error("Enter an equation first.");
     if (!(std::isfinite(tol) && tol > 0)) throw std::runtime_error("Tolerance must be a positive finite number.");
     if (maxIter < 1 || maxIter > 10000) throw std::runtime_error("Maximum iterations must be between 1 and 10000.");
@@ -160,7 +164,7 @@ static Result solveInternal(const std::string& expr, int method, double p1, doub
     if (method == 2) {
         double x = p1;
         if (!std::isfinite(x)) throw std::runtime_error("Initial guess must be finite.");
-        r.columns = {"Iteration", "xₙ", "f(xₙ)", "f′(xₙ) approx.", "xₙ₊₁", "|Δx|"};
+        r.columns = {"Iteration", "xₙ", "f(xₙ)", "f′(xₙ) approx.", "xₙ₊₁", "f(xₙ₊₁)", "|Δx|"};
         double fx = f(expr,x);
         if (std::fabs(fx) <= tol) { r.converged=true; r.status="converged"; r.root=x; r.residual=fx; r.message="Initial guess already satisfies the residual tolerance."; return r; }
         for (int i=1; i<=maxIter; ++i) {
@@ -171,7 +175,7 @@ static Result solveInternal(const std::string& expr, int method, double p1, doub
             if (!std::isfinite(next)) throw std::runtime_error("Newton–Raphson produced a non-finite estimate. Try a different initial guess.");
             double delta=std::fabs(next-x);
             double fnext=f(expr,next);
-            r.rows.push_back({{double(i),x,fx,dfx,next,delta}});
+            r.rows.push_back({{double(i),x,fx,dfx,next,fnext,delta}});
             r.iterations=i; r.root=next; r.residual=fnext;
             if (std::fabs(fnext) <= tol || (delta <= tol && std::fabs(fnext) <= std::sqrt(tol))) {
                 r.converged=true; r.status="converged"; r.message="The estimate converged within the requested tolerance."; return r;
@@ -183,7 +187,7 @@ static Result solveInternal(const std::string& expr, int method, double p1, doub
     if (method == 3) {
         double x0=p1, x1=p2;
         if (!std::isfinite(x0) || !std::isfinite(x1) || x0 == x1) throw std::runtime_error("Secant requires two distinct finite initial guesses.");
-        r.columns = {"Iteration", "xₙ₋₁", "xₙ", "f(xₙ₋₁)", "f(xₙ)", "xₙ₊₁", "|Δx|"};
+        r.columns = {"Iteration", "xₙ₋₁", "xₙ", "f(xₙ₋₁)", "f(xₙ)", "xₙ₊₁", "f(xₙ₊₁)", "|Δx|"};
         double f0=f(expr,x0), f1=f(expr,x1);
         if (std::fabs(f0) <= tol) { r.converged=true; r.status="converged"; r.root=x0; r.residual=f0; r.message="First initial guess already satisfies the residual tolerance."; return r; }
         if (std::fabs(f1) <= tol) { r.converged=true; r.status="converged"; r.root=x1; r.residual=f1; r.message="Second initial guess already satisfies the residual tolerance."; return r; }
@@ -193,7 +197,7 @@ static Result solveInternal(const std::string& expr, int method, double p1, doub
             double next=x1-f1*(x1-x0)/denom;
             if (!std::isfinite(next)) throw std::runtime_error("Secant produced a non-finite estimate. Try different initial guesses.");
             double delta=std::fabs(next-x1), fn=f(expr,next);
-            r.rows.push_back({{double(i),x0,x1,f0,f1,next,delta}});
+            r.rows.push_back({{double(i),x0,x1,f0,f1,next,fn,delta}});
             r.iterations=i; r.root=next; r.residual=fn;
             if (std::fabs(fn) <= tol || (delta <= tol && std::fabs(fn) <= std::sqrt(tol))) {
                 r.converged=true; r.status="converged"; r.message="The estimate converged within the requested tolerance."; return r;
@@ -229,7 +233,7 @@ static std::string toJson(const Result& r) {
       << ",\"converged\":" << (r.converged ? "true" : "false")
       << ",\"status\":\"" << jsonEscape(r.status) << "\",\"message\":\"" << jsonEscape(r.message) << "\",\"root\":";
     jsonNumber(o,r.root); o << ",\"residual\":"; jsonNumber(o,r.residual);
-    o << ",\"iterations\":" << r.iterations << ",\"columns\":[";
+    o << ",\"iterations\":" << r.iterations << ",\"functionEvaluations\":" << gFunctionEvaluations << ",\"columns\":[";
     for (size_t i=0;i<r.columns.size();++i) { if(i) o << ','; o << '"' << jsonEscape(r.columns[i]) << '"'; }
     o << "],\"rows\":[";
     for (size_t i=0;i<r.rows.size();++i) {
