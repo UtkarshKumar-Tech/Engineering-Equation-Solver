@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A browser-based nonlinear equation solver using Bisection, Newton–Raphson, and Secant methods.">
+  <title>RootFinder — Nonlinear Equation Solver</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="solver.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="RootFinder home"><span class="brand-mark">ƒx</span><span>RootFinder</span></a>
+    <span class="top-note"><span class="status-dot"></span> Runs locally in your browser</span>
+  </header>
+
+  <main id="top" class="page-shell">
+    <section class="hero">
+      <div class="eyebrow">NUMERICAL ANALYSIS TOOLKIT</div>
+      <h1>Find the root.<br><span>Understand every step.</span></h1>
+      <p>Explore nonlinear equations with three classic numerical methods. Enter your function, choose a method, and inspect the iteration-by-iteration results.</p>
+      <div class="method-pills"><span>Bisection</span><span>Newton–Raphson</span><span>Secant</span></div>
+    </section>
+
+    <section class="workspace" aria-label="Equation solver">
+      <div class="panel solver-panel">
+        <div class="panel-heading"><div><span class="step-label">01 / INPUT</span><h2>Define your equation</h2></div><span class="heading-icon">∑</span></div>
+        <form id="solver-form">
+          <label for="equation">Function <span class="muted">f(x) = 0</span></label>
+          <div class="equation-wrap"><span class="fx-prefix">f(x) =</span><input id="equation" name="equation" value="x^3 - x - 2" autocomplete="off" spellcheck="false" required aria-describedby="equation-help"></div>
+          <div id="equation-help" class="field-hint">Enter an expression in x, for example <button type="button" class="inline-example" data-expression="cos(x)-x">cos(x)-x</button>.</div>
+
+          <label for="method" class="spaced-label">Numerical method</label>
+          <select id="method" name="method">
+            <option value="1">Bisection Method</option>
+            <option value="2">Newton–Raphson Method</option>
+            <option value="3">Secant Method</option>
+          </select>
+
+          <div class="parameter-grid" id="parameter-grid">
+            <div class="field" id="field-a"><label for="param-a" id="label-a">Lower bound (a)</label><input id="param-a" type="number" step="any" value="1" required></div>
+            <div class="field" id="field-b"><label for="param-b" id="label-b">Upper bound (b)</label><input id="param-b" type="number" step="any" value="2" required></div>
+          </div>
+          <div class="field"><label for="tolerance">Tolerance</label><input id="tolerance" type="number" min="0.000000000001" step="any" value="0.0001" required><div class="field-hint">Smaller tolerances generally require more iterations.</div></div>
+          <div class="field"><label for="max-iterations">Maximum iterations</label><input id="max-iterations" type="number" min="1" max="10000" step="1" value="100"></div>
+          <div id="input-error" class="alert error hidden" role="alert"></div>
+          <button id="solve-button" class="primary-button" type="submit"><span>Calculate root</span><span aria-hidden="true">↗</span></button>
+        </form>
+        <details class="help-details">
+          <summary>Supported equations &amp; input rules</summary>
+          <div class="help-content">
+            <h3>Operators</h3><p><code>+</code> addition · <code>-</code> subtraction · <code>*</code> multiplication · <code>/</code> division · <code>^</code> power · <code>( )</code> grouping</p>
+            <h3>Functions</h3><p><code>sin(x)</code>, <code>cos(x)</code>, <code>tan(x)</code>, <code>exp(x)</code>, <code>log(x)</code>, <code>sqrt(x)</code>, <code>abs(x)</code></p>
+            <h3>Constants</h3><p><code>pi</code> and <code>e</code>. Trigonometric functions use radians; <code>log</code> is the natural logarithm.</p>
+            <h3>Input rules</h3><ul><li>Use <code>x</code> as the variable.</li><li>Write multiplication explicitly: <code>2*x</code>, not <code>2x</code>.</li><li>Function names are lowercase and require parentheses.</li><li><code>log(x)</code> requires a positive argument; <code>sqrt(x)</code> requires a nonnegative argument.</li><li>Enter <code>f(x)</code>; the solver interprets it as <code>f(x) = 0</code>.</li></ul>
+            <h3>Examples</h3><div class="example-list"><button type="button" data-expression="x^3-x-2">x^3 - x - 2</button><button type="button" data-expression="x^2-4">x^2 - 4</button><button type="button" data-expression="sin(x)-0.5">sin(x) - 0.5</button><button type="button" data-expression="exp(x)-3">exp(x) - 3</button><button type="button" data-expression="sqrt(x)-2">sqrt(x) - 2</button><button type="button" data-expression="(x+1)*(x-2)">(x+1)*(x-2)</button></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="results-column">
+        <section class="panel result-panel" aria-live="polite">
+          <div class="panel-heading"><div><span class="step-label">02 / RESULTS</span><h2>Solution summary</h2></div><span class="heading-icon">⌁</span></div>
+          <div id="empty-state" class="empty-state"><div class="empty-symbol">x*</div><h3>Your result will appear here</h3><p>Enter an equation and calculate a root to see the solution summary and iteration table.</p></div>
+          <div id="result-content" class="hidden">
+            <div id="status-banner" class="status-banner"></div>
+            <div class="root-card"><div class="root-label">APPROXIMATE ROOT</div><div id="root-value" class="root-value">—</div><div id="root-equation" class="root-equation"></div></div>
+            <div class="metric-grid"><div class="metric"><span>Residual |f(x)|</span><strong id="residual-value">—</strong></div><div class="metric"><span>Iterations</span><strong id="iteration-value">—</strong></div><div class="metric"><span>Method</span><strong id="method-value">—</strong></div><div class="metric"><span>Tolerance</span><strong id="tolerance-value">—</strong></div></div>
+            <p id="result-message" class="result-message"></p>
+          </div>
+          <div id="wasm-error" class="alert error hidden" role="alert">The WebAssembly solver did not load. Follow the setup instructions in README.md and serve this folder through a local web server.</div>
+        </section>
+
+        <section class="panel table-panel">
+          <div class="panel-heading table-heading"><div><span class="step-label">03 / CONVERGENCE</span><h2>Iteration table</h2></div><button id="download-csv" class="secondary-button" type="button" disabled>Export CSV ↓</button></div>
+          <div id="table-empty" class="table-empty">The iteration history will be shown here after you solve an equation.</div>
+          <div id="table-scroll" class="table-scroll hidden"><table id="iteration-table"><thead></thead><tbody></tbody></table></div>
+          <div id="table-footnote" class="table-footnote hidden">Values are shown at full precision in calculations and rounded for display.</div>
+        </section>
+      </div>
+    </section>
+    <footer><span>RootFinder · Numerical methods for learning and exploration</span><span>Powered by C++ / WebAssembly</span></footer>
+  </main>
+</body>
+</html>
